@@ -1,0 +1,105 @@
+﻿@{
+    ViewBag.Title = "Akka Sessions";
+}
+<h2>@ViewBag.Title.</h2>
+<h3>@ViewBag.Message</h3>
+
+<p>Chat.</p>
+
+<div class="container">
+    <input type="text" id="message" />
+    <input type="button" id="sendmessage" value="Send" />
+    <input type="hidden" id="displayname" />
+    <ul id="discussion"></ul>
+
+    <h2>Master</h2>
+    <input type="button" id="startSession" value="StartSession" />
+    <div id="masterdetails"></div>
+
+
+    <input type="text" id="state" />
+    <input type="button" id="updateState" value="Update State" />
+
+    <h2>Peer</h2>
+    <input type="text" id="sessioncode" />
+    <input type="button" id="joinsession" value="joinsession" />
+    <div id="hasjoinedsession"></div>
+    <ul id="stateChanges"></ul>
+
+</div>
+
+<script type="text/javascript">
+        $(function () {
+//            // Declare a proxy to reference the hub.
+//            var chat = $.connection.chatHub;
+//            // Create a function that the hub can call to broadcast messages.
+//            chat.client.broadcastMessage = function (name, message) {
+//                // Html encode display name and message.
+//                var encodedName = $('<div />').text(name).html();
+//                var encodedMsg = $('<div />').text(message).html();
+//                // Add the message to the page.
+//                $('#discussion').append('<li><strong>' + encodedName
+//                    + '</strong>:&nbsp;&nbsp;' + encodedMsg + '</li>');
+//            };
+//            // Get the user name and store it to prepend to messages.
+//            $('#displayname').val(prompt('Enter your name:', ''));
+//            // Set initial focus to message input box.
+//            $('#message').focus();
+//            // Start the connection.
+//            $.connection.hub.start().done(function () {
+//                $('#sendmessage').click(function () {
+//                    // Call the Send method on the hub.
+//                    chat.server.send($('#displayname').val(), $('#message').val());
+//                    // Clear text box and reset focus for next comment.
+//                    $('#message').val('').focus();
+//                });
+//            });
+
+
+            var connection = $.hubConnection();
+            var hubProxy = connection.createHubProxy('snapshotHubAkka');
+            hubProxy.on('snapshotChanged',
+                function(state) {
+                    console.warn('SNAPSHOT CHANGED', state);
+                    // Html encode display name and message.
+                    var encodedState = $('<div />').text(state).html();
+                    // Add the message to the page.
+                    $('#stateChanges').append('<li><strong>' + encodedState + '</strong></li>');
+                });
+
+            connection.start()
+                .done(function() {
+
+
+                    //start session
+                    $('#startSession').click(function () {
+                        hubProxy.invoke('createSession').then(function (sessionDetails) {
+                            var session = JSON.parse(sessionDetails);
+                            $('#masterdetails').text(session.Username);
+                        });
+                    });
+
+                    //update state
+                    $('#updateState').click(function () {
+                        var state = $('#state').val();
+                        var sessionCode = $('#masterdetails').text();
+                        console.warn('updating snapshot with' + sessionCode, state);
+                        hubProxy.invoke('updateSnapshot', sessionCode, state);
+                    });
+
+                    //join session
+                    $('#joinsession').click(function () {
+                        var sessionId = $('#sessioncode').val();
+                        hubProxy.invoke('joinSession', sessionId).then(function (state) {
+                            $('#hasjoinedsession').text('<b>Joined session:</b><br/>' + sessionId);
+
+                            var encodedState = $('<div />').text(state).html();
+                            // Add the message to the page.
+                            $('#stateChanges').append('<li><strong>' + encodedState
+                                + '</strong></li>');
+                        });
+                    });
+                });
+
+        });
+</script>

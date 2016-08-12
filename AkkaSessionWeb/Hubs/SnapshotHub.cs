@@ -10,7 +10,6 @@ using Newtonsoft.Json;
 
 namespace AkkaSessionWeb.Hubs
 {
-    //[HubName("snapshotHub")]
     public class SnapshotHub : Hub
     {
         private const string ScreenShareRole = "Screen Share";

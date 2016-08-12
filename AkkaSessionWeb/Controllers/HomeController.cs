@@ -40,5 +40,11 @@ namespace AkkaSessionWeb.Controllers
 
             return View();
         }
+        public ActionResult SessionAkka()
+        {
+            ViewBag.Message = "Session Akka.";
+
+            return View();
+        }
     }
 }
